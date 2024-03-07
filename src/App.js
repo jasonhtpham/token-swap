@@ -1,127 +1,191 @@
 import './App.css';
+import React from 'react';
 import { PeraWalletConnect } from '@perawallet/connect';
 import algosdk, { waitForConfirmation } from 'algosdk';
 import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import Form from 'react-bootstrap/Form';
 import { useEffect, useState } from 'react';
+import detectEthereumProvider from '@metamask/detect-provider';
+
+// Ethereum provider
+const provider = await detectEthereumProvider();
 
 // Create the PeraWalletConnect instance outside the component
 const peraWallet = new PeraWalletConnect();
 
-// The app ID on testnet
-const appIndex = 122184273;
+const mnemonic = "idle oppose bronze obscure coyote bridge option unveil swim patrol beyond crisp auction chicken egg plate master proof hill example stone finish remind absorb elbow";
+const logicSigBase64 = "BTEQgQQSMRQxABIQMRKBABIQRIEBQw==";
 
 // connect to the algorand node
 const algod = new algosdk.Algodv2('', 'https://testnet-api.algonode.cloud', 443);
+const indexerClient = new algosdk.Indexer('', 'https://testnet-idx.algonode.cloud', 443);
 
 function App() {
-  const [accountAddress, setAccountAddress] = useState(null);
-  const [currentCount, setCurrentCount] = useState(null);
-  const isConnectedToPeraWallet = !!accountAddress;
+  const [algorandAddress, setAlgorandAddress] = useState(null);
+  const [ethereumAddress, setEthereumAddress] = useState(null);
+  const [originPlatform, setOriginPlatform] = useState("");
+  const [tokenId, setTokenId] = useState("");
+  const [tokenData, setTokenData] = useState();
+
+  const isConnectedToPeraWallet = !!algorandAddress;
+  const isConnectedToMetaMask = !!ethereumAddress;
 
   useEffect(() => {
-    checkCounterState();
     // reconnect to session when the component is mounted
     peraWallet.reconnectSession().then((accounts) => {
       // Setup disconnect event listener
-      peraWallet.connector?.on('disconnect', handleDisconnectWalletClick);
+      peraWallet.connector?.on('disconnect', handleDisconnectAlgoWalletClick);
 
       if (accounts.length) {
-        setAccountAddress(accounts[0]);
+        setAlgorandAddress(accounts[0]);
       }
     })
 
   }, []);
 
+  // Construct LogicSig for AssetOptin in Algorand
+  const constructLogicSig = () => {
+    const account = algosdk.mnemonicToSecretKey(mnemonic);
+    const compiledProgram = new Uint8Array(Buffer.from(logicSigBase64, "base64"));
+    let lsig = new algosdk.LogicSig(compiledProgram);
+    const signedLogicSig = lsig.signProgram(account.sk);
+
+    return signedLogicSig;
+  };
+
+  // Get Token information from Algorand 
+  const checkTokenAlgorand = async () => {
+    // const tokenData = await indexerClient.lookupAssetByID(tokenId).do();
+    const tokenData = await algod.getApplicationByID(tokenId).do();
+    setTokenData(tokenData);
+  };
+
+  // Get Token information from Ethereum 
+  const checkTokenEthereum = () => {
+
+  };
+
+  // Based on user input, check for token data to ensure token existence 
+  const check = async () => {
+    if (originPlatform === 'algo') {
+      checkTokenAlgorand();
+    }
+    else {
+      checkTokenEthereum();
+    }
+  }
+
+  // Swap token by burn one and create one
+  const burnAsset = async () => {
+
+  }
+
+  // This form appears after token data is retrieved
+  const burnAssetForm = (
+    <React.Fragment>
+      <Form.Control as="textarea" value={JSON.stringify(tokenData, undefined, 2)} rows={10} />
+      <Button className="btn-wallet"
+        onClick={burnAsset}>
+        {originPlatform === "algo" ? "Swap for Ethereum Token" : "Swap for Algorand Token"}
+      </Button>
+    </React.Fragment>
+  )
+
+  //  This form appears when blockchain account is connected
+  const checkAssetForm = (
+    <React.Fragment>
+      <Form.Label htmlFor="assetId">Token Identifier</Form.Label>
+      <Form.Control
+        type="text"
+        id="assetId"
+        aria-describedby="tokenIdInput"
+        onChange={(e) => setTokenId(e.target.value)}
+      />
+      <Form.Select id="platform" aria-label="Default select example" onChange={(e) => setOriginPlatform(e.target.value)}>
+        <option>Select origin platform</option>
+        <option value="algo">Algorand</option>
+        <option value="eth">Ethereum</option>
+      </Form.Select>
+      <Button className="btn-wallet"
+        onClick={check}>
+        {"Check"}
+      </Button>
+      {tokenData
+        ? burnAssetForm
+        : null
+      }
+    </React.Fragment>
+  )
+
   return (
     <Container className='App-header'>
-      <meta name="name" content="Your name here" />
-      <h1> AlgoHUB - Lab 2</h1>
+      <meta name="name" content="Token Swap" />
+      <h1> Token Swap powered by SChare</h1>
       <Row>
-        <Col><Button className="btn-wallet"
-          onClick={
-            isConnectedToPeraWallet ? handleDisconnectWalletClick : handleConnectWalletClick
-          }>
-          {isConnectedToPeraWallet ? "Disconnect" : "Connect to Pera Wallet"}
-        </Button></Col>
-      </Row>
-
-
-      <Container>
-        <Row>
-          <Col><Button className="btn-add"
+        <Col>
+          <Button className="btn-wallet"
             onClick={
-              () => callCounterApplication('Add')
+              isConnectedToPeraWallet ? handleDisconnectAlgoWalletClick : handleConnectAlgoWalletClick
             }>
-            Increase
-          </Button></Col>
-          <Col>
-            <h3>Count</h3>
-            <span className='counter-text'>{currentCount}</span>
-          </Col>
-          <Col><Button className="btn-dec"
-            onClick={() => callCounterApplication('Deduct')}>
-            Decrease
-          </Button></Col>
-        </Row>
-      </Container>
+            {isConnectedToPeraWallet ? "Disconnect Algorand" : "Connect to Algorand Pera Wallet"}
+          </Button>
+        </Col>
+        <Col>
+          <Button className="btn-wallet"
+            onClick={
+              isConnectedToMetaMask ? handleDisconnectEthWalletClick : handleConnectEthWalletClick
+            }>
+            {isConnectedToMetaMask ? "Disconnect MetaMask" : "Connect to Etherem MetaMask"}
+          </Button>
+        </Col>
+      </Row>
+      <Row>
+        <Col>
+          {algorandAddress && ethereumAddress
+            ? checkAssetForm
+            : null
+          }
+        </Col>
+      </Row>
     </Container>
   );
 
-  function handleConnectWalletClick() {
+  function handleConnectAlgoWalletClick() {
     peraWallet.connect().then((newAccounts) => {
       // setup the disconnect event listener
-      peraWallet.connector?.on('disconnect', handleDisconnectWalletClick);
+      peraWallet.connector?.on('disconnect', handleDisconnectAlgoWalletClick);
 
-      setAccountAddress(newAccounts[0]);
+      setAlgorandAddress(newAccounts[0]);
     });
   }
 
-  function handleDisconnectWalletClick() {
+  function handleDisconnectAlgoWalletClick() {
     peraWallet.disconnect();
-    setAccountAddress(null);
+    setAlgorandAddress(null);
   }
 
-  async function checkCounterState() {
-    try {
-      const counter = await algod.getApplicationByID(appIndex).do();
-      if (!!counter.params['global-state'][0].value.uint) {
-        setCurrentCount(counter.params['global-state'][0].value.uint);
-      } else {
-        setCurrentCount(0);
-      }
-    } catch (e) {
-      console.error('There was an error connecting to the algorand node: ', e)
+  async function handleDisconnectEthWalletClick() {
+    await window.ethereum.request({ method: 'wallet_revokePermissions' })
+  }
+
+  async function handleConnectEthWalletClick() {
+    if (provider !== window.ethereum) {
+      console.error('Do you have multiple wallets installed?');
     }
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      .catch((err) => {
+        if (err.code === 4001) {
+          console.log('Please connect to MetaMask.');
+        } else {
+          console.error(err);
+        }
+      });
+    setEthereumAddress(accounts[0]);
   }
 
-  async function callCounterApplication(action) {
-    try {
-      // get suggested params
-      const suggestedParams = await algod.getTransactionParams().do();
-      const appArgs = [new Uint8Array(Buffer.from(action))];
-
-      const actionTx = algosdk.makeApplicationNoOpTxn(
-        accountAddress,
-        suggestedParams,
-        appIndex,
-        appArgs
-      );
-
-      const actionTxGroup = [{ txn: actionTx, signers: [accountAddress] }];
-
-      const signedTx = await peraWallet.signTransaction([actionTxGroup]);
-      console.log(signedTx);
-      const { txId } = await algod.sendRawTransaction(signedTx).do();
-      const result = await waitForConfirmation(algod, txId, 2);
-      checkCounterState();
-
-    } catch (e) {
-      console.error(`There was an error calling the counter app: ${e}`);
-    }
-  }
 }
 
 export default App;

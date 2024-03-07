@@ -14,5 +14,6 @@ module.exports = function override(config, env) {
             ...config.resolve.fallback, ...okv.fallback
         };
     }
+    config.experiments = { ...config.experiments, topLevelAwait: true }
     return config;
 }
