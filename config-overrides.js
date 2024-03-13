@@ -3,8 +3,9 @@
 module.exports = function override(config, env) {
     okv = {
         fallback: {
-            crypto: require.resolve('crypto-browserify')
-
+            crypto: require.resolve('crypto-browserify'),
+            util: false,
+            url: false,
         },
     };
     if (!config.resolve) {
