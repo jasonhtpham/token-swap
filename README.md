@@ -1,74 +1,17 @@
-# AlgoHUB - Counter App Template
+# Token Swap - SChare
 
-This project repository is a template used for our 2nd Algorand Lab, [Deploying to Testnet and Interacting with Smart Contracts in the Browser](https://github.com/Algo-Hub-io/pyteal-course/Lab2).
+## Background
 
+This project is the use case to demonstrate how to develop blockchain application by leveraging the SChare platform.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+SChare is a platform built based on a framework that offers smart contract creation as a service. The platform aims to allow general software engineers to develop blockchain applications without the need to acquire deep blockchain expertise. Smart contract creation services on the platform are documented with guidelines and instructions for developers to consume.
 
-## Available Scripts
+## Cross-chain Token Swap
 
-In the project directory, you can run:
+At the simplest level of explanation, cross-chain token swap refer to an exchange of a token on one blockchain network for its equivalent on another blockchain network.
 
-### `npm start`
+For example, Alice has a CryptoKitty NFT on Ethereum, she wants to send it to Bob as a gift, but Bob's wallet is on Algorand blockchain and he only use one wallet. Therefore, Alice needs to perform a cross-chain swap to exchange her Ethereum CryptoKitty NFT for an equivalent Algorand CryptoKitty NFT before sending it to Bob.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Services
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
-# counter-app
+The Token Swap application provide the ability to perform swap of Non-Fungible Tokens (NFTs) between blockchain networks. In this example, we would like to demonstrate the swap between Ethereum <> Algorand. Therefore, it utilizes 2 available services on [SChare](https://baas-db.fly.dev/service): NFT (Algorand) and NFT (Ethereum).
