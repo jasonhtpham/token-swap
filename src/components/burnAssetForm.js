@@ -1,6 +1,5 @@
-import React from 'react';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
+import React, { useState } from 'react';
+import { Button, Container, Row, Col, Modal, Form } from 'react-bootstrap';
 import algosdk from 'algosdk';
 import { API } from '../helpers';
 import { onMessageListener, fetchToken } from "../firebase";
@@ -9,8 +8,8 @@ const mnemonic = "idle oppose bronze obscure coyote bridge option unveil swim pa
 const logicSigBase64 = "BTEQgQQSMRQxABIQMRKBABIQRIEBQw==";
 
 export const BurnAssetForm = (props) => {
-  // const [notificationData, setNotificationData] = useState([]);
-  // const [open, setOpen] = useState(false);
+  const [notificationData, setNotificationData] = useState({});
+  const [open, setOpen] = useState(false);
 
   const tokenDataObj = {
     "jobName": "",
@@ -31,12 +30,14 @@ export const BurnAssetForm = (props) => {
 
   onMessageListener()
     .then((payload) => {
-      // setNotificationData(payload.notification.body.split(","));
-      // setOpen(true);
-      console.log("payload", payload);
+      payload.data.returnData = JSON.parse(payload.data.returnData);
+      setNotificationData(payload.data);
+      setOpen(true);
     })
     .catch((err) => console.log("failed: ", err)
     );
+
+  const handleModalClose = () => setOpen(false);
 
   // Construct LogicSig for AssetOptin in Algorand
   const constructLogicSig = () => {
@@ -76,6 +77,48 @@ export const BurnAssetForm = (props) => {
   }
 
   return (<React.Fragment>
+    <Modal show={open} onHide={handleModalClose}>
+      <Modal.Dialog>
+        <Modal.Header closeButton>
+          <Modal.Title>Token Swap Result</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <Container>
+            <Row>
+              <Col>
+                <p>The swap was {notificationData.status}</p>
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                <p>
+                  Your new token identifier on {props.originPlatform === "algo" ? "Ethereum" : "Algorand"} is {notificationData.returnData?.nftContractAddress}
+                </p>
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                <Button
+                  href={props.originPlatform === "algo" ?
+                    `https://sepolia.etherscan.io/address/${notificationData.returnData?.nftContractAddress}`
+                    : `https://testnet.explorer.perawallet.app/asset/${notificationData.returnData?.nftContractAddress}`}
+                  target="_blank"
+                  className="mt-3">
+                  Token details on Explorer
+                </Button>
+              </Col>
+            </Row>
+          </Container>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleModalClose}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal.Dialog>
+    </Modal>
     <Form.Control as="textarea" readOnly={true} value={JSON.stringify(props.tokenData, undefined, 2)} rows={10} />
     <Button className="btn-wallet"
       onClick={mintEthNFT}>
