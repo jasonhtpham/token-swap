@@ -99,7 +99,7 @@ export const BurnAssetForm = (props) => {
       setOpen(true);
       if (payload.data.status === "SUCCESS") {
         console.log(payload.data);
-        // burnAsset();
+        burnAsset();
       }
     })
     .catch((err) => console.log("failed: ", err)
@@ -197,8 +197,7 @@ export const BurnAssetForm = (props) => {
     </Modal>
     <Form.Control as="textarea" readOnly={true} value={JSON.stringify(props.tokenData, undefined, 2)} rows={10} />
     <Button className="btn-wallet"
-      // onClick={props.originPlatform === "algo" ? mintEthNFT : mintAlgoNFT}>
-      onClick={burnAsset}>
+      onClick={props.originPlatform === "algo" ? mintEthNFT : mintAlgoNFT}>
       {props.originPlatform === "algo" ? "Swap for Ethereum Token" : "Swap for Algorand Token"}
     </Button>
   </React.Fragment>)
