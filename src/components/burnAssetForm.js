@@ -4,7 +4,6 @@ import algosdk, { waitForConfirmation } from 'algosdk';
 import { API } from '../helpers';
 import { constructLogicSig } from '../helpers/utils/utils.js';
 import { onMessageListener, fetchToken } from "../firebase";
-import { PeraWalletConnect } from '@perawallet/connect';
 import Web3 from 'web3';
 import tokenABI from '../blockchain/tokenABI';
 import detectEthereumProvider from '@metamask/detect-provider';
@@ -14,7 +13,6 @@ const provider = await detectEthereumProvider();
 const web3 = new Web3(provider || "ws://localhost:8545");
 
 const algod = new algosdk.Algodv2('', 'https://testnet-api.algonode.cloud', 443);
-const peraWallet = new PeraWalletConnect();
 
 export const BurnAssetForm = (props) => {
   const [notificationData, setNotificationData] = useState({});
@@ -44,31 +42,53 @@ export const BurnAssetForm = (props) => {
     if (props.originPlatform === 'algo') {
       let params = await algod.getTransactionParams().do();
 
-      const txn = algosdk.makeAssetDestroyTxnWithSuggestedParams(
-        props.algorandAddress,
-        undefined,
-        props.tokenId,
-        params,
-        undefined
-      );
       try {
-        const signedTxn = await peraWallet.signTransaction([{ txn: txn, signers: [props.algorandAddress] }]);
+        const transferTxn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+          from: props.algorandAddress,
+          to: props.tokenData.params.creator,
+          suggestedParams: params,
+          assetIndex: parseInt(props.tokenId),
+          amount: 1,
+        });
+
+        const signedTxn = await props.peraWallet.signTransaction([[{ txn: transferTxn, signers: [props.algorandAddress] }]]);
 
         const { txId } = await algod.sendRawTransaction(signedTxn).do();
 
         const result = await waitForConfirmation(algod, txId, 3);
 
-        console.log(result);
+        console.log("Transfer", result);
+      } catch (err) {
+        console.error(err);
+      };
+
+      try {
+        const txn = algosdk.makeAssetDestroyTxnWithSuggestedParams(
+          props.algorandAddress,
+          undefined,
+          parseInt(props.tokenId),
+          params,
+          undefined
+        );
+
+        const signedTxn = await props.peraWallet.signTransaction([[{ txn: txn, signers: [props.algorandAddress] }]]);
+
+        const { txId } = await algod.sendRawTransaction(signedTxn).do();
+
+        const result = await waitForConfirmation(algod, txId, 3);
+
+        console.log("Delete", result);
       } catch (err) {
         console.error(err);
       };
     } else {
       const tokenContract = new web3.eth.Contract(tokenABI, props.tokenId);
-      tokenContract.methods.burn(1).call({ from: props.ethereumAdress }).then((result) => {
-        console.log(result);
-      }).catch((error) => {
-        console.error(error);
-      });
+      try {
+        const result = await tokenContract.methods.burn(1).call({ from: props.ethereumAdress });
+        console.log("Eth Burn result: ", result);
+      } catch (err) {
+        console.error(err);
+      };
     }
   }
 
@@ -143,7 +163,7 @@ export const BurnAssetForm = (props) => {
           <Container>
             <Row>
               <Col>
-                <p>The swap was {notificationData.status.toLowerCase()}</p>
+                <p>The swap was {notificationData.status?.toLowerCase()}</p>
               </Col>
             </Row>
             <Row>
@@ -177,7 +197,8 @@ export const BurnAssetForm = (props) => {
     </Modal>
     <Form.Control as="textarea" readOnly={true} value={JSON.stringify(props.tokenData, undefined, 2)} rows={10} />
     <Button className="btn-wallet"
-      onClick={props.originPlatform === "algo" ? mintEthNFT : mintAlgoNFT}>
+      // onClick={props.originPlatform === "algo" ? mintEthNFT : mintAlgoNFT}>
+      onClick={burnAsset}>
       {props.originPlatform === "algo" ? "Swap for Ethereum Token" : "Swap for Algorand Token"}
     </Button>
   </React.Fragment>)

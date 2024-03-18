@@ -41,7 +41,8 @@ export const CheckAssetForm = (props) => {
         decimals: 0,
         name: "",
         symbol: "",
-        url: ""
+        url: "",
+        owner: "",
       }
     };
 
@@ -49,6 +50,7 @@ export const CheckAssetForm = (props) => {
       _tokenData.params.name = await tokenContract.methods.name().call({ from: props.ethereumAdress });
       _tokenData.params.symbol = await tokenContract.methods.symbol().call({ from: props.ethereumAdress });
       _tokenData.params.url = await tokenContract.methods.tokenURI(1).call({ from: props.ethereumAdress });
+      _tokenData.params.owner = await tokenContract.methods.ownerOf(1).call({ from: props.ethereumAdress });
     } catch (err) {
       console.err(err);
     }
@@ -84,7 +86,7 @@ export const CheckAssetForm = (props) => {
       {"Check"}
     </Button>
     {tokenData.params
-      ? <BurnAssetForm originPlatform={originPlatform} tokenData={tokenData} setTokenData={setTokenData} ethereumAddress={props.ethereumAddress} algorandAddress={props.algorandAddress} tokenId={tokenId} />
+      ? <BurnAssetForm originPlatform={originPlatform} tokenData={tokenData} setTokenData={setTokenData} ethereumAddress={props.ethereumAddress} algorandAddress={props.algorandAddress} tokenId={tokenId} peraWallet={props.peraWallet} />
       : null
     }
   </React.Fragment>
