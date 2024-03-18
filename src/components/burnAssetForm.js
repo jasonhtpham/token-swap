@@ -84,7 +84,7 @@ export const BurnAssetForm = (props) => {
     } else {
       const tokenContract = new web3.eth.Contract(tokenABI, props.tokenId);
       try {
-        const result = await tokenContract.methods.burn(1).call({ from: props.ethereumAdress });
+        const result = await tokenContract.methods.burn(1).send({ from: props.ethereumAddress });
         console.log("Eth Burn result: ", result);
       } catch (err) {
         console.error(err);
