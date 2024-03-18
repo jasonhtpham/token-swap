@@ -27,12 +27,12 @@ export const BurnAssetForm = (props) => {
     "datafileURL": {
       "url": "",
       "json": {
-        assetName: "",
-        assetUnitName: "",
-        totalSupply: 0,
-        decimals: 0,
-        assetURL: "",
-        receiver: ""
+        "assetName": "",
+        "assetUnitName": "",
+        "totalSupply": 0,
+        "decimals": 0,
+        "assetURL": "",
+        "receiver": ""
       }
     }
   }
@@ -74,7 +74,7 @@ export const BurnAssetForm = (props) => {
 
   onMessageListener()
     .then((payload) => {
-      payload.data.returnData = JSON.parse(payload.data.returnData);
+      payload.data.returnData = payload.data?.returnData ? JSON.parse(payload.data.returnData) : null;
       setNotificationData(payload.data);
       setOpen(true);
       if (payload.data.status === "SUCCESS") {
@@ -94,10 +94,8 @@ export const BurnAssetForm = (props) => {
     tokenDataObj.firebaseMessagingToken = await fetchToken();
     let signedLogicSig = constructLogicSig();
 
-
-
     tokenDataObj.datafileURL.json.assetName = props.tokenData.params.name;
-    tokenDataObj.datafileURL.json.assetUnitName = props.tokenData.params.unitName;
+    tokenDataObj.datafileURL.json.assetUnitName = props.tokenData.params.symbol;
     tokenDataObj.datafileURL.json.totalSupply = props.tokenData.params.total;
     tokenDataObj.datafileURL.json.decimals = props.tokenData.params.decimals;
     tokenDataObj.datafileURL.json.assetURL = props.tokenData.params.url ?? "";
@@ -145,7 +143,7 @@ export const BurnAssetForm = (props) => {
           <Container>
             <Row>
               <Col>
-                <p>The swap was {notificationData.status}</p>
+                <p>The swap was {notificationData.status.toLowerCase()}</p>
               </Col>
             </Row>
             <Row>

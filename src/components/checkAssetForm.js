@@ -17,7 +17,7 @@ const algod = new algosdk.Algodv2('', 'https://testnet-api.algonode.cloud', 443)
 
 export const CheckAssetForm = (props) => {
   const [tokenId, setTokenId] = useState("");
-  const [tokenData, setTokenData] = useState();
+  const [tokenData, setTokenData] = useState({});
   const [originPlatform, setOriginPlatform] = useState("");
 
   // Get Token information from Algorand 
@@ -39,25 +39,20 @@ export const CheckAssetForm = (props) => {
       params: {
         total: 1,
         decimals: 0,
+        name: "",
+        symbol: "",
+        url: ""
       }
     };
 
-    tokenContract.methods.name().call({ from: props.ethereumAdress }).then((result) => {
-      _tokenData.params.name = result;
-    }).catch((error) => {
-      console.error(error);
-    });
+    try {
+      _tokenData.params.name = await tokenContract.methods.name().call({ from: props.ethereumAdress });
+      _tokenData.params.symbol = await tokenContract.methods.symbol().call({ from: props.ethereumAdress });
+      _tokenData.params.url = await tokenContract.methods.tokenURI(1).call({ from: props.ethereumAdress });
+    } catch (err) {
+      console.err(err);
+    }
 
-    tokenContract.methods.symbol().call({ from: props.ethereumAdress }).then((result) => {
-      _tokenData.params.unitName = result;
-    }).catch((error) => {
-      console.error(error);
-    });
-    tokenContract.methods.tokenURI(1).call({ from: props.ethereumAdress }).then((result) => {
-      _tokenData.params.url = result;
-    }).catch((error) => {
-      console.error(error);
-    });
     setTokenData(_tokenData);
   };
 
@@ -67,7 +62,7 @@ export const CheckAssetForm = (props) => {
       checkTokenAlgorand();
     }
     else {
-      checkTokenEthereum();
+      await checkTokenEthereum();
     }
   }
 
@@ -88,7 +83,7 @@ export const CheckAssetForm = (props) => {
       onClick={check}>
       {"Check"}
     </Button>
-    {tokenData
+    {tokenData.params
       ? <BurnAssetForm originPlatform={originPlatform} tokenData={tokenData} setTokenData={setTokenData} ethereumAddress={props.ethereumAddress} algorandAddress={props.algorandAddress} tokenId={tokenId} />
       : null
     }
