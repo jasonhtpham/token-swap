@@ -169,7 +169,7 @@ export const BurnAssetForm = (props) => {
             <Row>
               <Col>
                 <p>
-                  Your new token identifier on {props.originPlatform === "algo" ? "Ethereum" : "Algorand"} is {notificationData.returnData?.nftContractAddress}
+                  Your new token identifier on {props.originPlatform === "algo" ? `Ethereum is ${notificationData.returnData?.nftContractAddress}` : `Algorand is ${notificationData.returnData?.assetID}`}
                 </p>
               </Col>
             </Row>
@@ -178,7 +178,7 @@ export const BurnAssetForm = (props) => {
                 <Button
                   href={props.originPlatform === "algo" ?
                     `https://sepolia.etherscan.io/address/${notificationData.returnData?.nftContractAddress}`
-                    : `https://testnet.explorer.perawallet.app/asset/${notificationData.returnData?.nftContractAddress}`}
+                    : `https://testnet.explorer.perawallet.app/asset/${notificationData.returnData?.assetID}`}
                   target="_blank"
                   className="mt-3">
                   Token details on Explorer
