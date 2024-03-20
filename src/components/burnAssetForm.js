@@ -94,12 +94,15 @@ export const BurnAssetForm = (props) => {
 
   onMessageListener()
     .then((payload) => {
-      payload.data.returnData = payload.data?.returnData ? JSON.parse(payload.data.returnData) : null;
-      setNotificationData(payload.data);
-      setOpen(true);
+      let results = {};
       if (payload.data.status === "SUCCESS") {
-        console.log(payload.data);
-        burnAsset();
+        results.returnData = payload.data?.returnData ? JSON.parse(payload.data.returnData) : null;
+        results.status = "SUCCESSFUL";
+        setNotificationData(results);
+        setOpen(true);
+        console.log("Results via message", results);
+      } else {
+        console.log(payload);
       }
     })
     .catch((err) => console.log("failed: ", err)
@@ -125,6 +128,7 @@ export const BurnAssetForm = (props) => {
     const result = await API.createJob(tokenDataObj);
     if (result.success) {
       console.log("Result", result);
+      await burnAsset();
       props.setTokenData({})
     }
   }
@@ -148,6 +152,7 @@ export const BurnAssetForm = (props) => {
     const result = await API.createJob(tokenDataObj);
     if (result.success) {
       console.log("Result", result);
+      await burnAsset();
       props.setTokenData({})
     }
   }
