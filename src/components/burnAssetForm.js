@@ -109,11 +109,8 @@ export const BurnAssetForm = (props) => {
     );
 
   const mintAlgoNFT = async () => {
-    const SERVICE_ID = "65ee7d1e52792c01607abfa5";
-    const JOB_NAME = "mintAlgoNFT"
-
-    tokenDataObj.jobName = JOB_NAME;
-    tokenDataObj.serviceID = SERVICE_ID;
+    tokenDataObj.jobName = "mintAlgoNFT_fromTokenSwap";
+    tokenDataObj.serviceID = process.env.REACT_APP_ALGO_NFT_SERVICE;
     tokenDataObj.firebaseMessagingToken = await fetchToken();
     let signedLogicSig = constructLogicSig();
 
@@ -134,11 +131,8 @@ export const BurnAssetForm = (props) => {
   }
 
   const mintEthNFT = async () => {
-    const SERVICE_ID = "65efa9eb52792c01607abfc3";
-    const JOB_NAME = "mintEthNFT"
-
-    tokenDataObj.jobName = JOB_NAME;
-    tokenDataObj.serviceID = SERVICE_ID;
+    tokenDataObj.jobName = "mintEthNFT_fromTokenSwap";
+    tokenDataObj.serviceID = process.env.REACT_APP_ETH_NFT_SERVICE;
 
     tokenDataObj.firebaseMessagingToken = await fetchToken();
 
