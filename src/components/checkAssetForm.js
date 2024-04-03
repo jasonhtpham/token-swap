@@ -4,48 +4,56 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { useState } from 'react';
 import { BurnAssetForm } from './burnAssetForm';
-// import Web3 from 'web3';
+import Web3 from 'web3';
+import tokenABI from '../blockchain/tokenABI';
+import detectEthereumProvider from '@metamask/detect-provider';
 
-// // connect to ethereum
-// const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
+// connect to ethereum
+const provider = await detectEthereumProvider();
+const web3 = new Web3(provider || "ws://localhost:8545");
 
 // connect to the algorand node
 const algod = new algosdk.Algodv2('', 'https://testnet-api.algonode.cloud', 443);
 
 export const CheckAssetForm = (props) => {
   const [tokenId, setTokenId] = useState("");
-  const [tokenData, setTokenData] = useState();
+  const [tokenData, setTokenData] = useState({});
   const [originPlatform, setOriginPlatform] = useState("");
 
   // Get Token information from Algorand 
   const checkTokenAlgorand = async () => {
-    const tokenData = await algod.getAssetByID(tokenId).do();
-    setTokenData(tokenData);
+    const _tokenData = await algod.getAssetByID(tokenId).do();
+    setTokenData(_tokenData);
   };
 
   // Get Token information from Ethereum 
-  const checkTokenEthereum = () => {
-    // const companyContract = new web3.eth.Contract(tokenABI, tokenId);
-    // const _tokenData = {};
+  const checkTokenEthereum = async () => {
+    const ethAddressRegEx = new RegExp(/^(0x)?[0-9a-fA-F]{40}$/);
+    if (!ethAddressRegEx.test(tokenId)) {
+      alert("Invalid Ethereum Address");
+      return;
+    }
 
-    // companyContract.methods.name().call({ from: props.ethereumAdress }).then((result) => {
-    //   _tokenData.name = result;
-    // }).catch((error) => {
-    //   console.error(error);
-    // });
+    const tokenContract = new web3.eth.Contract(tokenABI, tokenId);
+    const _tokenData = {
+      params: {
+        total: 1,
+        decimals: 0,
+        name: "",
+        symbol: "",
+        url: "",
+      }
+    };
 
-    // companyContract.methods.unitName().call({ from: props.ethereumAdress }).then((result) => {
-    //   _tokenData.unitName = result;
-    // }).catch((error) => {
-    //   console.error(error);
-    // });
+    try {
+      _tokenData.params.name = await tokenContract.methods.name().call({ from: props.ethereumAdress });
+      _tokenData.params.symbol = await tokenContract.methods.symbol().call({ from: props.ethereumAdress });
+      _tokenData.params.url = await tokenContract.methods.tokenURI(1).call({ from: props.ethereumAdress });
+    } catch (err) {
+      console.err(err);
+    }
 
-    // companyContract.methods.totalSupply().call({ from: props.ethereumAdress }).then((result) => {
-    //   _tokenData.totalSupply = result;
-    // }).catch((error) => {
-    //   console.error(error);
-    // });
-    // setTokenData(tokenData);
+    setTokenData(_tokenData);
   };
 
   // Based on user input, check for token data to ensure token existence 
@@ -54,7 +62,7 @@ export const CheckAssetForm = (props) => {
       checkTokenAlgorand();
     }
     else {
-      checkTokenEthereum();
+      await checkTokenEthereum();
     }
   }
 
@@ -75,8 +83,8 @@ export const CheckAssetForm = (props) => {
       onClick={check}>
       {"Check"}
     </Button>
-    {tokenData
-      ? <BurnAssetForm originPlatform={originPlatform} tokenData={tokenData} ethereumAddress={props.ethereumAddress} algorandAddress={props.algorandAddress} />
+    {tokenData.params
+      ? <BurnAssetForm originPlatform={originPlatform} tokenData={tokenData} setTokenData={setTokenData} ethereumAddress={props.ethereumAddress} algorandAddress={props.algorandAddress} tokenId={tokenId} peraWallet={props.peraWallet} />
       : null
     }
   </React.Fragment>
