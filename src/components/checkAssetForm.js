@@ -50,7 +50,7 @@ export const CheckAssetForm = (props) => {
       _tokenData.params.symbol = await tokenContract.methods.symbol().call({ from: props.ethereumAdress });
       _tokenData.params.url = await tokenContract.methods.tokenURI(1).call({ from: props.ethereumAdress });
     } catch (err) {
-      console.err(err);
+      console.error(err);
     }
 
     setTokenData(_tokenData);

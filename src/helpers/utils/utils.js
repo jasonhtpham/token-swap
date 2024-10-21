@@ -15,7 +15,7 @@ const constructLogicSig = () => {
 };
 
 const constructSignature = () => {
-  const message = process.env.REACT_APP_SCHARE_API_KEY + process.env.REACT_APP_SCHARE_API_KEY_NAME;
+  const message = process.env.REACT_APP_SCHARE_API_KEY + process.env.REACT_APP_SCHARE_SERVICE_NAME;
   const hmac = CryptoJS.HmacSHA256(message, process.env.REACT_APP_SCHARE_SECRET_KEY);
   const hash = hmac.toString(CryptoJS.enc.Hex);
   return hash;
