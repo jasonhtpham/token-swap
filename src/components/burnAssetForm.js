@@ -4,7 +4,6 @@ import algosdk, { waitForConfirmation } from 'algosdk';
 import { API } from '../helpers';
 import { constructLogicSig } from '../helpers/utils/utils.js';
 import { onMessageListener, fetchToken } from "../firebase";
-import { PeraWalletConnect } from '@perawallet/connect';
 import Web3 from 'web3';
 import tokenABI from '../blockchain/tokenABI';
 import detectEthereumProvider from '@metamask/detect-provider';
@@ -14,7 +13,6 @@ const provider = await detectEthereumProvider();
 const web3 = new Web3(provider || "ws://localhost:8545");
 
 const algod = new algosdk.Algodv2('', 'https://testnet-api.algonode.cloud', 443);
-const peraWallet = new PeraWalletConnect();
 
 export const BurnAssetForm = (props) => {
   const [notificationData, setNotificationData] = useState({});
@@ -47,15 +45,13 @@ export const BurnAssetForm = (props) => {
       const txn = algosdk.makeAssetDestroyTxnWithSuggestedParams(
         props.algorandAddress,
         undefined,
-        props.tokenId,
+        parseInt(props.tokenId),
         params,
         undefined
       );
       try {
-        const signedTxn = await peraWallet.signTransaction([{ txn: txn, signers: [props.algorandAddress] }]);
-
+        const signedTxn = await props.peraWallet.signTransaction([[{ txn: txn, signers: [props.algorandAddress] }]]);
         const { txId } = await algod.sendRawTransaction(signedTxn).do();
-
         const result = await waitForConfirmation(algod, txId, 3);
 
         console.log(result);
@@ -73,19 +69,20 @@ export const BurnAssetForm = (props) => {
   }
 
   onMessageListener()
-    .then((payload) => {
+    .then(async (payload) => {
       payload.data.returnData = JSON.parse(payload.data.returnData);
-      setNotificationData(payload.data);
-      setOpen(true);
       if (payload.data.status === "SUCCESS") {
         console.log(payload.data);
-        // burnAsset();
+        setNotificationData(payload.data);
+        setOpen(true);
       }
     })
     .catch((err) => console.log("failed: ", err)
     );
 
   const mintAlgoNFT = async () => {
+    await burnAsset();
+
     const SERVICE_ID = "65ee7d1e52792c01607abfa5";
     const JOB_NAME = "mintAlgoNFT"
 
@@ -93,8 +90,6 @@ export const BurnAssetForm = (props) => {
     tokenDataObj.serviceID = SERVICE_ID;
     tokenDataObj.firebaseMessagingToken = await fetchToken();
     let signedLogicSig = constructLogicSig();
-
-
 
     tokenDataObj.datafileURL.json.assetName = props.tokenData.params.name;
     tokenDataObj.datafileURL.json.assetUnitName = props.tokenData.params.unitName;
@@ -112,6 +107,7 @@ export const BurnAssetForm = (props) => {
   }
 
   const mintEthNFT = async () => {
+    await burnAsset();
     const SERVICE_ID = "65efa9eb52792c01607abfc3";
     const JOB_NAME = "mintEthNFT"
 

@@ -62,7 +62,7 @@ function App() {
       <Row>
         <Col>
           {algorandAddress && ethereumAddress
-            ? <CheckAssetForm ethereumAddress={ethereumAddress} algorandAddress={algorandAddress} />
+            ? <CheckAssetForm ethereumAddress={ethereumAddress} algorandAddress={algorandAddress} peraWallet={peraWallet} />
             : null
           }
         </Col>

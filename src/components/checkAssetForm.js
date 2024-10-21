@@ -89,7 +89,7 @@ export const CheckAssetForm = (props) => {
       {"Check"}
     </Button>
     {tokenData
-      ? <BurnAssetForm originPlatform={originPlatform} tokenData={tokenData} setTokenData={setTokenData} ethereumAddress={props.ethereumAddress} algorandAddress={props.algorandAddress} tokenId={tokenId} />
+      ? <BurnAssetForm originPlatform={originPlatform} tokenData={tokenData} setTokenData={setTokenData} ethereumAddress={props.ethereumAddress} algorandAddress={props.algorandAddress} tokenId={tokenId} peraWallet={props.peraWallet} />
       : null
     }
   </React.Fragment>
