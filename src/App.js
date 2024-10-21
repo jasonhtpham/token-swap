@@ -14,7 +14,7 @@ import { fetchToken } from "./firebase";
 const provider = await detectEthereumProvider();
 
 // Create the PeraWalletConnect instance outside the component
-const peraWallet = new PeraWalletConnect();
+const peraWallet = new PeraWalletConnect({ shouldShowSignTxnToast: false });
 
 function App() {
   const [algorandAddress, setAlgorandAddress] = useState(null);

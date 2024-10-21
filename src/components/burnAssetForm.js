@@ -25,12 +25,12 @@ export const BurnAssetForm = (props) => {
     "datafileURL": {
       "url": "",
       "json": {
-        assetName: "",
-        assetUnitName: "",
-        totalSupply: 0,
-        decimals: 0,
-        assetURL: "",
-        receiver: ""
+        "assetName": "",
+        "assetUnitName": "",
+        "totalSupply": 0,
+        "decimals": 0,
+        "assetURL": "",
+        "receiver": ""
       }
     }
   }
@@ -42,39 +42,66 @@ export const BurnAssetForm = (props) => {
     if (props.originPlatform === 'algo') {
       let params = await algod.getTransactionParams().do();
 
-      const txn = algosdk.makeAssetDestroyTxnWithSuggestedParams(
-        props.algorandAddress,
-        undefined,
-        parseInt(props.tokenId),
-        params,
-        undefined
-      );
       try {
+        const transferTxn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+          from: props.algorandAddress,
+          to: props.tokenData.params.creator,
+          suggestedParams: params,
+          assetIndex: parseInt(props.tokenId),
+          amount: 1,
+        });
+
+        const signedTxn = await props.peraWallet.signTransaction([[{ txn: transferTxn, signers: [props.algorandAddress] }]]);
+
+        const { txId } = await algod.sendRawTransaction(signedTxn).do();
+
+        const result = await waitForConfirmation(algod, txId, 3);
+
+        console.log("Transfer", result);
+      } catch (err) {
+        console.error(err);
+      };
+
+      try {
+        const txn = algosdk.makeAssetDestroyTxnWithSuggestedParams(
+          props.algorandAddress,
+          undefined,
+          parseInt(props.tokenId),
+          params,
+          undefined
+        );
+
         const signedTxn = await props.peraWallet.signTransaction([[{ txn: txn, signers: [props.algorandAddress] }]]);
+
         const { txId } = await algod.sendRawTransaction(signedTxn).do();
         const result = await waitForConfirmation(algod, txId, 3);
 
-        console.log(result);
+        console.log("Delete", result);
       } catch (err) {
         console.error(err);
       };
     } else {
       const tokenContract = new web3.eth.Contract(tokenABI, props.tokenId);
-      tokenContract.methods.burn(1).call({ from: props.ethereumAdress }).then((result) => {
-        console.log(result);
-      }).catch((error) => {
-        console.error(error);
-      });
+      try {
+        const result = await tokenContract.methods.burn(1).send({ from: props.ethereumAddress });
+        console.log("Eth Burn result: ", result);
+      } catch (err) {
+        console.error(err);
+      };
     }
   }
 
   onMessageListener()
-    .then(async (payload) => {
-      payload.data.returnData = JSON.parse(payload.data.returnData);
+    .then((payload) => {
+      let results = {};
       if (payload.data.status === "SUCCESS") {
-        console.log(payload.data);
-        setNotificationData(payload.data);
+        results.returnData = payload.data?.returnData ? JSON.parse(payload.data.returnData) : null;
+        results.status = "SUCCESSFUL";
+        setNotificationData(results);
         setOpen(true);
+        console.log("Results via message", results);
+      } else {
+        console.log(payload);
       }
     })
     .catch((err) => console.log("failed: ", err)
@@ -82,17 +109,13 @@ export const BurnAssetForm = (props) => {
 
   const mintAlgoNFT = async () => {
     await burnAsset();
-
-    const SERVICE_ID = "65ee7d1e52792c01607abfa5";
-    const JOB_NAME = "mintAlgoNFT"
-
-    tokenDataObj.jobName = JOB_NAME;
-    tokenDataObj.serviceID = SERVICE_ID;
+    tokenDataObj.jobName = "mintAlgoNFT_fromTokenSwap";
+    tokenDataObj.serviceID = process.env.REACT_APP_ALGO_NFT_SERVICE;
     tokenDataObj.firebaseMessagingToken = await fetchToken();
     let signedLogicSig = constructLogicSig();
 
     tokenDataObj.datafileURL.json.assetName = props.tokenData.params.name;
-    tokenDataObj.datafileURL.json.assetUnitName = props.tokenData.params.unitName;
+    tokenDataObj.datafileURL.json.assetUnitName = props.tokenData.params.symbol;
     tokenDataObj.datafileURL.json.totalSupply = props.tokenData.params.total;
     tokenDataObj.datafileURL.json.decimals = props.tokenData.params.decimals;
     tokenDataObj.datafileURL.json.assetURL = props.tokenData.params.url ?? "";
@@ -108,11 +131,8 @@ export const BurnAssetForm = (props) => {
 
   const mintEthNFT = async () => {
     await burnAsset();
-    const SERVICE_ID = "65efa9eb52792c01607abfc3";
-    const JOB_NAME = "mintEthNFT"
-
-    tokenDataObj.jobName = JOB_NAME;
-    tokenDataObj.serviceID = SERVICE_ID;
+    tokenDataObj.jobName = "mintEthNFT_fromTokenSwap";
+    tokenDataObj.serviceID = process.env.REACT_APP_ETH_NFT_SERVICE;
 
     tokenDataObj.firebaseMessagingToken = await fetchToken();
 
@@ -141,13 +161,13 @@ export const BurnAssetForm = (props) => {
           <Container>
             <Row>
               <Col>
-                <p>The swap was {notificationData.status}</p>
+                <p>The swap was {notificationData.status?.toLowerCase()}</p>
               </Col>
             </Row>
             <Row>
               <Col>
                 <p>
-                  Your new token identifier on {props.originPlatform === "algo" ? "Ethereum" : "Algorand"} is {notificationData.returnData?.nftContractAddress}
+                  Your new token identifier on {props.originPlatform === "algo" ? `Ethereum is ${notificationData.returnData?.nftContractAddress}` : `Algorand is ${notificationData.returnData?.assetID}`}
                 </p>
               </Col>
             </Row>
@@ -156,7 +176,7 @@ export const BurnAssetForm = (props) => {
                 <Button
                   href={props.originPlatform === "algo" ?
                     `https://sepolia.etherscan.io/address/${notificationData.returnData?.nftContractAddress}`
-                    : `https://testnet.explorer.perawallet.app/asset/${notificationData.returnData?.nftContractAddress}`}
+                    : `https://testnet.explorer.perawallet.app/asset/${notificationData.returnData?.assetID}`}
                   target="_blank"
                   className="mt-3">
                   Token details on Explorer
